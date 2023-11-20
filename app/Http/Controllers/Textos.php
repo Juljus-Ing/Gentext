@@ -60,7 +60,6 @@ class Textos extends Controller
             $quien = Crypt::decrypt($quien);
             $texto = DB::table('textos')->where('id', $quien)->first();
 
-            // Verificar si se encontraron resultados
             if (!$texto) {
                 return redirect()->back()->with('error', 'No se encontró el texto especificado.');
             }
@@ -83,7 +82,7 @@ class Textos extends Controller
 
             // Estilo de párrafo
             $paragrahStyle = array(
-                'alignment' => 'left', // Alineación justificada
+                'alignment' => 'left', // Alineación izquierda
                 'spaceAfter' => 120,
                 'indentation' => array('firstLine' => 720), // Sangría de 1.27 cm
             );
@@ -145,7 +144,7 @@ class Textos extends Controller
 
             $portadaSection->addText('Instituto Universitario Politécnico Grancolombiano', $portadaStyle);
 
-            // Agregar la fecha actual en formato mes - año
+            // FECHA PORTADA
             $fechaActual = new \DateTime();
             $textRun = $portadaSection->addText($fechaActual->format('M - Y'), $portadaStyle);
 
@@ -157,25 +156,28 @@ class Textos extends Controller
             $section->addText('RESUMEN', $titleStyle);
             $section->addText($resumen, $fontStyle);
 
-
+            // INTRODUCCION
             $section->addText('INTRODUCCIÓN', $titleStyle);
             $section->addText($introduccion, $fontStyle, $paragrahStyle);
+
+            // DESARROLLO
             $section->addText('DESARROLLO', $titleStyle);
             $section->addText($desarrollo, $fontStyle, $paragrahStyle);
+
+            // CONCLUSION
             $section->addText('CONCLUSIÓN', $titleStyle);
             $section->addText($conclusion, $fontStyle, $paragrahStyle);
 
 
 
-            // Guardar el documento
+            // GUARDADO DE DOCUMENTO
             $filename = $titulo . '.docx';
             $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
             $objWriter->save(storage_path($filename));
 
-            // Descargar el documento
+            // DESCARGA
             return response()->download(storage_path($filename))->deleteFileAfterSend(true);
         } catch (\Exception $e) {
-            // Manejo de excepciones: puedes imprimir o registrar el mensaje de error.
             return redirect()->back()->with('error', 'Error al generar el documento: ' . $e->getMessage());
         }
     }
