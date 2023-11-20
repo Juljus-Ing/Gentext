@@ -5,9 +5,55 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpWord\SimpleType\TextAlignment;
 
 class Textos extends Controller
 {
+    public function nuevotexto() {
+        return view('nuevotexto');
+    }
+
+    public function editartexto($quien) {
+        $quien = Crypt::decrypt($quien);
+        $texto = DB::table('textos')->where('id', $quien)->get();           
+        return view("editartexto", compact('texto'));               
+    }
+
+    public function guardar(){
+        DB::table('textos')->insert([
+            'usuario' => auth()->user()->id,
+            'asignatura' => request()->asignatura,
+            'docente' => request()->docente,
+            'titulo' => request()->titulo,
+            'pclave' => request()->pclave,
+            'lluviaideas' => request()->lluviaideasimg,
+            'resumen' => request()->resumen,
+            'introduccion' => request()->introduccion,
+            'desarrollo' => request()->desarrollo,            
+            'conclusion' => request()->conclusion,
+            'progreso' => request()->contador
+        ]);        
+        return redirect()->to('/');
+    }
+
+    public function editar($quien){
+        $quien = Crypt::decrypt($quien);             
+        DB::table('textos')->where('id', $quien)->update([
+            'usuario' => auth()->user()->id,
+            'asignatura' => request()->asignatura,
+            'docente' => request()->docente,
+            'titulo' => request()->titulo,
+            'pclave' => request()->pclave,
+            'lluviaideas' => request()->lluviaideasimg,
+            'resumen' => request()->resumen,
+            'introduccion' => request()->introduccion,
+            'desarrollo' => request()->desarrollo,            
+            'conclusion' => request()->conclusion,
+            'progreso' => request()->contador
+        ]);        
+        return redirect()->to('/');
+    }
+
     public function generardoc($quien)
     {
         try {
@@ -20,7 +66,14 @@ class Textos extends Controller
             }
 
             $phpWord = new \PhpOffice\PhpWord\PhpWord();
+            $portadaSection = $phpWord->addSection();
             $section = $phpWord->addSection();
+
+            $portadaStyle = array(
+                'name' => 'Times New Roman',
+                'size' => 12,
+                'alignment' => 'center',
+            );
 
             // Estilo de fuente
             $fontStyle = array(
@@ -29,9 +82,10 @@ class Textos extends Controller
             );
 
             // Estilo de párrafo
-            $paragraphStyle = array(
-                'alignment' => 'both', // Alineación justificada
+            $paragrahStyle = array(
+                'alignment' => 'left', // Alineación justificada
                 'spaceAfter' => 120,
+                'indentation' => array('firstLine' => 720), // Sangría de 1.27 cm
             );
 
             // Título del documento
@@ -40,7 +94,6 @@ class Textos extends Controller
                 'size' => 14,
                 'bold' => true,
             );
-            
 
             // Obtener los datos del texto
             $asignatura = $texto->asignatura;
@@ -52,29 +105,67 @@ class Textos extends Controller
             $desarrollo = $texto->desarrollo;
             $conclusion = $texto->conclusion;
 
-            // Añadir título del documento
-            $section->addText($titulo, $titleStyle);
+            // PORTADA
+            $portadaSection->addText($titulo, $titleStyle);
 
-            // Agregar texto al documento con estilos
-            $section->addText($asignatura, $fontStyle, $paragraphStyle);
-            $section->addText($docente, $fontStyle, $paragraphStyle);
-            $section->addText($titulo, $fontStyle, $paragraphStyle);
-            $section->addText($pclave, $fontStyle, $paragraphStyle);
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
 
-            // Añadir resumen con estilo cursiva
-            $italicStyle = array(
-                'italic' => true,
-            );
+            $portadaSection->addText('Aqui va su nombre', $portadaStyle);
+            
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+
+            $portadaSection->addText($asignatura, $portadaStyle);
+            $portadaSection->addText($docente, $portadaStyle);
+
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+            $portadaSection->addTextBreak();
+
+            $portadaSection->addText('Instituto Universitario Politécnico Grancolombiano', $portadaStyle);
+
+            // Agregar la fecha actual en formato mes - año
+            $fechaActual = new \DateTime();
+            $textRun = $portadaSection->addText($fechaActual->format('M - Y'), $portadaStyle);
+
+            // PALABRAS CLAVE
+            $section->addText('PALABRAS CLAVE',$titleStyle);
+            $section->addText($pclave, $fontStyle, $paragrahStyle);
+
+            // RESUMEN
             $section->addText('RESUMEN', $titleStyle);
-            $section->addText($resumen, $fontStyle, $italicStyle);
+            $section->addText($resumen, $fontStyle);
 
-            // Añadir secciones principales con numeración
-            $section->addText('1. INTRODUCCIÓN', $titleStyle);
-            $section->addText($introduccion, $fontStyle, $paragraphStyle);
-            $section->addText('2. DESARROLLO', $titleStyle);
-            $section->addText($desarrollo, $fontStyle, $paragraphStyle);
-            $section->addText('3. CONCLUSIÓN', $titleStyle);
-            $section->addText($conclusion, $fontStyle, $paragraphStyle);
+
+            $section->addText('INTRODUCCIÓN', $titleStyle);
+            $section->addText($introduccion, $fontStyle, $paragrahStyle);
+            $section->addText('DESARROLLO', $titleStyle);
+            $section->addText($desarrollo, $fontStyle, $paragrahStyle);
+            $section->addText('CONCLUSIÓN', $titleStyle);
+            $section->addText($conclusion, $fontStyle, $paragrahStyle);
+
+
 
             // Guardar el documento
             $filename = $titulo . '.docx';
