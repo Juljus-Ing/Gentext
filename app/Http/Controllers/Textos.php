@@ -154,7 +154,7 @@ class Textos extends Controller
 
             // RESUMEN
             $section->addText('RESUMEN', $titleStyle);
-            $section->addText($resumen, $fontStyle);
+            $section->addText($resumen, $fontStyle, $paragrahStyle);
 
             // INTRODUCCION
             $section->addText('INTRODUCCIÓN', $titleStyle);
@@ -180,5 +180,14 @@ class Textos extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error al generar el documento: ' . $e->getMessage());
         }
+
+        
     }
+
+    public function eliminartexto($quien){
+        $quien = Crypt::decrypt($quien); 
+        DB::table('textos')->where('id',$quien)->delete();
+        return redirect()->to('/');
+    }
+
 }
